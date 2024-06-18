@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const User = require('../Models/usersModel');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -104,4 +105,30 @@ router.delete('/deleteUserById/:id', async (req,res) => {
        });
     };
    });   
-   module.exports = router;
+
+router.post('/usersLogIn', async (req, res) => {
+    const { email , password} = req.body;
+    const user = await User.findOne({ email }).select('+password');
+
+    if( !email || !password) {
+        res.status(400).json({
+            message:'Please provide email or password'
+        });     
+    };
+    
+    if( !user || !(await user.correctPassword(password, user.password))) {
+        res.status(401).json({
+            message:'Incorrect email or password'
+        });     
+    }else{
+        const token = jwt.sign({ id: User._id }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN});;
+        res.status(200).json({
+            message:'Logged in successfully.',
+            token
+        });
+
+        console.log('User signed in successfully.')
+    }
+});
+   
+module.exports = router;
