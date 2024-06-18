@@ -1,6 +1,8 @@
 const express = require('express');
 const User = require('../Models/usersModel');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 router.post('/userSignIn', async (req , res) => {
     const password = req.body.password;
@@ -16,8 +18,16 @@ router.post('/userSignIn', async (req , res) => {
        });
 
        const newUser = await data.save(); 
-       res.status(200).json(newUser);
-       console.log('New user signed in succesfully.');
+
+       const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN});
+
+       res.status(200).json({
+        token,
+        data: {
+            user: newUser
+        }
+       });
+       console.log('New user signed in succesfully.Password is encrypted.');
     
       }else{
         res.status(401).json({
