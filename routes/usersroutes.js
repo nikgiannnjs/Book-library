@@ -4,6 +4,8 @@ const User = require('../Models/usersModel');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const crypto = require('crypto');
+const sendEmail = require('../email');
 
 router.post('/userSignIn', async (req , res, next) => {
     const password = req.body.password;
@@ -144,7 +146,7 @@ router.post('/usersLogIn', async (req, res, next) => {
 router.post('/forgotPassword', async (req, res, next) => {
     try{
         const user = await User.findOne({ email: req.body.email });
-    
+
         if(!user) {
             res.status(400).json({
             message:'Incorrect email. Please provide a valid email.'
@@ -153,17 +155,78 @@ router.post('/forgotPassword', async (req, res, next) => {
         }else{
             const resetToken = user.createPasswordResetToken();
             await user.save({ validateBeforeSave: false});
-            //Send it to user's email
+            
+            const resetURL = `${req.protocol}://${req.get('host')}/bookstore/users/resetPassword/${resetToken}`;
+            console.log(`Reset URL: ${resetURL}`);
+
+            const message = `Please submit a PATCH request with your new password and password confirm to ${resetURL}`;
+            console.log(message);
         }
+          try{
+            await sendEmail({
+            email: user.email,
+            subject: 'Your password reset token (valid for 10 minutes)',
+            message
+            });
+
+            res.status(200).json({
+            status: 'success',
+            message: 'Token sent to email'
+        });
+          }catch(err){
+            await user.save({ validateBeforeSave: false});
+
+            res.status(500).json({
+                message:"There was an error while trying to send email. Please try again later."
+            });
+
+            next();
+        };
       }catch{
         res.status(500).json({
-            message:"Something went wrong while trying to reset a user's password."
+            message:"Something went wrong in the forgot password endpoint."
         });
       }
         
  });
 
-router.post('/resetPassword', async (req, res) => {
+router.patch('/resetPassword/:token', async (req, res, next) => {
+ 
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+ try{
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if(!user) {
+        res.status(400).json({
+            message:'Token is invalid or it has expired.'
+            });
+            next();
+    }else{
+        user.password = req.body.password;
+        user.passwordConfirm = req.body.passwordConfirm;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+
+        await user.save();
+
+        const token = jwt.sign({ id: User._id }, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN});;
+        
+        res.status(200).json({
+            message:'Password reset was successful.',
+            token
+        });
+
+        console.log('The password was reset successfully');
+    };
+
+ }catch{
+    res.status(500).json({
+        message:"Something went wrong while trying to reset a user's password."
+    });
+} 
 });
    
 module.exports = router;
