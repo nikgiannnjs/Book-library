@@ -5,7 +5,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-router.post('/userSignIn', async (req , res) => {
+router.post('/userSignIn', async (req , res, next) => {
     const password = req.body.password;
     const passwordConfirm = req.body.passwordConfirm;
     
@@ -35,6 +35,7 @@ router.post('/userSignIn', async (req , res) => {
             message:'Password and password confirmation are not the same.'
         });
         console.log('Password and password confirmation are not the same.');
+        next();
       };
 
     }catch{
@@ -106,14 +107,17 @@ router.delete('/deleteUserById/:id', async (req,res) => {
     };
    });   
 
-router.post('/usersLogIn', async (req, res) => {
+router.post('/usersLogIn', async (req, res, next) => {
+   try{
     const { email , password} = req.body;
     const user = await User.findOne({ email }).select('+password');
 
     if( !email || !password) {
         res.status(400).json({
             message:'Please provide email or password'
-        });     
+        });  
+        
+        next();
     };
     
     if( !user || !(await user.correctPassword(password, user.password))) {
@@ -127,8 +131,39 @@ router.post('/usersLogIn', async (req, res) => {
             token
         });
 
-        console.log('User signed in successfully.')
-    }
+        console.log('User logged in successfully.')
+    };
+   }catch{
+    res.status(500).json({
+        message:"Something went wrong while trying to log in a user."
+    });
+
+   }
+});
+
+router.post('/forgotPassword', async (req, res, next) => {
+    try{
+        const user = await User.findOne({ email: req.body.email });
+    
+        if(!user) {
+            res.status(400).json({
+            message:'Incorrect email. Please provide a valid email.'
+            });
+            next();
+        }else{
+            const resetToken = user.createPasswordResetToken();
+            await user.save({ validateBeforeSave: false});
+            //Send it to user's email
+        }
+      }catch{
+        res.status(500).json({
+            message:"Something went wrong while trying to reset a user's password."
+        });
+      }
+        
+ });
+
+router.post('/resetPassword', async (req, res) => {
 });
    
 module.exports = router;
