@@ -26,20 +26,10 @@ const userSchema = new mongoose.Schema({
         validate:{
             validator: 
             function (el) {
-            return el === this.password;
+            return el === this.password; //expectation
             }
-            //function (el) {
-            // if this.password === this.passwordConfirm {
-            // return el === this.password;
-            //}else{
-            // res.status(400).json({
-             //message:'Password and password confirm are not the same.'
-            //});
-            //}
-            //
-            //}
-        }
-    }    
+        },
+    } 
 });
 
 const User = mongoose.model('User', userSchema);
