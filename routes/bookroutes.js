@@ -66,7 +66,7 @@ router.patch('/updateBookById/:id', async (req,res) => {
  }
 });
 
-router.delete('/deleteById/:id', async (req,res) => {
+router.delete('/deleteBookById/:id', async (req,res) => {
  try{
     id = req.params.id
     const bookToDelete = await Book.findByIdAndDelete(id);
