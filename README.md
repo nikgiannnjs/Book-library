@@ -138,16 +138,17 @@ A user creates their profile by providing personal info based on the user schema
 
 ## Database Schema
 
-- `Users`
-  name: String (required, trimmed)
-  email: String (required, unique, lowercase)
-  password: String (required, minimum 8 characters, not selectable)
-  passwordConfirm: String (must match password)
+- **Users**
 
-- `Books`
-  title: String (required, trimmed)
-  author: String (required, trimmed)
-  pages: Number (required)
-  genres: Array (optional)
-  description: String (required)
-  rating: Number (min: 0, max: 10)
+  - `name`: String (required, trimmed)
+  - `email`: String (required, unique, lowercase)
+  - `password`: String (required, minimum 8 characters, not selectable)
+  - `passwordConfirm`: String (must match `password`)
+
+- **Books**
+  - `title`: String (required, trimmed)
+  - `author`: String (required, trimmed)
+  - `pages`: Number (required)
+  - `genres`: Array (optional)
+  - `description`: String (required)
+  - `rating`: Number (min: 0, max: 10)
