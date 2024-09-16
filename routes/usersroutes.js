@@ -77,7 +77,7 @@ router.patch("/updateUsernameoremailById/:id", async (req, res) => {
     if (typeof password !== "undefined") {
       res.status(401).json({
         message:
-          "You cannot update password on this link, only username and email. For password updates please visit this link.",
+          "You cannot update password on this link, only username and email.",
       });
     } else {
       id = req.params.id;

@@ -1,6 +1,6 @@
 const express = require("express");
 const Book = require("../Models/bookModel");
-const router = express.Router(); //express drivers gia na mporw na routarw
+const router = express.Router();
 
 router.post("/insertBookinDB", async (req, res) => {
   try {
@@ -13,7 +13,7 @@ router.post("/insertBookinDB", async (req, res) => {
       rating: req.body.rating,
     });
 
-    const insertedBook = await data.save(); //kanei save ta data pou stelnw
+    const insertedBook = await data.save();
     res.status(200).json(insertedBook);
     console.log("Book is saved in the Database");
   } catch {
